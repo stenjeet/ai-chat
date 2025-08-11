@@ -1,0 +1,16 @@
+.account {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+	width: 200px;
+	padding: 10px 0px;
+	border-radius: 12px;
+	margin: 0 auto;
+	background: #313131;
+}
+
+.logout {
+	color: #fff;
+	cursor: pointer;
+}
