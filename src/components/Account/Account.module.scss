@@ -1,16 +1,25 @@
 .account {
 	display: flex;
-	justify-content: center;
 	align-items: center;
 	gap: 10px;
-	width: 200px;
-	padding: 10px 0px;
+
+	width: 230px;
+	padding: 10px;
 	border-radius: 12px;
-	margin: 0 auto;
 	background: #313131;
+
+	overflow: hidden;
+}
+
+.account p {
+	flex: 1;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .logout {
+	flex-shrink: 0;
 	color: #fff;
 	cursor: pointer;
 }
