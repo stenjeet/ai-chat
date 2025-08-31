@@ -1,21 +1,25 @@
+'use client'
+
 import { FC } from "react";
 import Link from 'next/link';
 import { IChat } from "@/types";
 import styles from './ChatList.module.scss';
 import { RiDeleteBinLine } from "react-icons/ri";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 
 
 interface ChatsListProps {
 	chats: IChat[]
+	setChats: React.Dispatch<React.SetStateAction<IChat[]>>
 };
 
  
-const ChatsList: FC<ChatsListProps> = ({ chats }) => {
+const ChatsList: FC<ChatsListProps> = ({ chats, setChats }) => {
 
 
 	const router = useRouter();
+	const pathname = usePathname();
 
 	const deleteChat = async (id: string) => {
 		
@@ -24,8 +28,13 @@ const ChatsList: FC<ChatsListProps> = ({ chats }) => {
 		});
 
 		if (res.ok) {
-			router.push('/chat')
-		}
+			setChats((prevChats: IChat[]) => prevChats.filter(chat => chat._id.toString() !== id))
+			
+			
+			if (pathname.startsWith(`/chat/${id}`)) {
+      			router.push('/chat');
+    		};
+		};
 	};
 
 	return (
@@ -38,7 +47,7 @@ const ChatsList: FC<ChatsListProps> = ({ chats }) => {
 					<Link
 						href={`/chat/${chat._id}`}
 					>
-						Chat {new Date(chat.createdAt).toLocaleString()}
+						Chat {new Date(chat.createdAt).toLocaleDateString()}
 					</Link>
 					<RiDeleteBinLine
 						className={styles.deleteBtn}
