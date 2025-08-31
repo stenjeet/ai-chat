@@ -4,10 +4,11 @@ import styles from './SideBar.module.scss';
 import { useEffect, useState } from "react";
 import { House, PanelLeft } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import ChatsList from '../ChatsList/ChatList';
 import Account from '../Account/Account';
 import { IChat } from '@/types';
+import { CiLogout } from 'react-icons/ci';
 
 
 
@@ -52,21 +53,39 @@ const SideBar = () => {
 
 	return (
 		<div className={`${styles.sidebar} ${collapsed && styles.collapsed}`}>
-			<div>
-				<div className={styles.sidebarBtns}>
-					<House className={styles.icon} onClick={() => router.push('/')} />
-					<PanelLeft className={styles.icon} onClick={onToggle} />
-				</div>
+				<div className={styles.top}>
+					<div className={`${styles.sidebarBtns} ${collapsed && styles.btnsCollapsed}`}>
+						<House className={styles.icon} onClick={() => router.push('/')} />
+						<PanelLeft className={styles.icon} onClick={onToggle} />
+					</div>
 
-				<button className={styles.btn} onClick={createChat}>
-					New chat
-				</button>
-				<p className={styles.title}>Chats</p>
-				<ChatsList chats={chats}/>
-			</div>
-			<div className={styles.account}>
-				<Account session={session}/>
-			</div>
+					{!collapsed && (
+						<button className={styles.btn} onClick={createChat}>
+							New chat
+						</button>
+					)}
+				</div>
+				
+				{!collapsed && (
+					<div className={styles.middle}>
+						<p className={styles.title}>Chats</p>
+						<div className={styles.chatsWrapper}>
+							<ChatsList chats={chats} setChats={setChats}/>
+						</div>
+					</div>
+				)}
+
+				<div className={styles.bottom}>
+					{!collapsed
+					? 
+					(
+						<Account session={session}/>
+					)
+					:
+					(
+						<CiLogout className={styles.logout} onClick={() => signOut({ callbackUrl: "/" })}/>
+					)}
+				</div>
 		</div>
 	);
 }
