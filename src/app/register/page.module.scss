@@ -1,5 +1,5 @@
 .registerPage {
-	height: 100vh;
+	height: 100%;
 	display: flex;
 	justify-content: center;
 	flex-direction: column;
@@ -13,7 +13,10 @@
 	padding: 25px;
 	border-radius: 20px;
 	text-align: center;
-	background: #272727;
+	
+	background: rgba(255, 255, 255, 0.05);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1)
 }
 
 .title {
