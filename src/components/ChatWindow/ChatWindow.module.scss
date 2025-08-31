@@ -40,34 +40,6 @@
   font-size: 0.875rem; 
 }
 
-.inputArea {
-  	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 800px;
-  	gap: 10px;
-	padding: 15px 10px;
-	border-radius: 15px;
-	background: #1A1A1E;
-}
-
-.input {
-   	width: 700px; 
-  	height: 60px;    
-  	border-radius: 6px;
-  	font-size: 18px;
-  	box-sizing: border-box; 
-	border: none;
-
-	resize: none;
-  	overflow-y: auto;
-  	scrollbar-width: none;
-
-	background: transparent;
-	color: var(--primary-color);
-	outline: none;
-}
-
 .sendButton {
 	width: 36px;
   	height: 36px;
@@ -81,4 +53,10 @@
   	text-align: center;
 
   	background: var(--primary-color); 
+}
+
+.emptyChat {
+	margin: auto;
+	font-size: 24px;
+	font-weight: 500;
 }

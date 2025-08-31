@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import styles from './ChatWindow.module.scss';
-import { MdOutlineArrowUpward } from "react-icons/md";
-import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
+import Input from "../Input/Input";
+import ShinyText from "../ShinyText/ShinyText";
 
 
 
@@ -19,12 +19,8 @@ const ChatWindow = () => {
   	const [input, setInput] = useState('');
   	const [loading, setLoading] = useState(false);
 
-
-	const { data: session } = useSession();
-  	const userId = session?.user?.id;
   	const params = useParams();
   	const chatId = params?.chatId;
-
 
 
 	const sendMessage = async () => {
@@ -66,8 +62,8 @@ const ChatWindow = () => {
 
 			const updatedChat = await patchRes.json();
 			if (updatedChat.messages) {
-		setMessages(updatedChat.messages);
-		}
+				setMessages(updatedChat.messages);
+			}
 
 		} catch (err) {
 			console.error(err);
@@ -78,7 +74,8 @@ const ChatWindow = () => {
 
 
  	const handleKeyDown = (e: React.KeyboardEvent) => {
-    	if (e.key === 'Enter') {
+    	if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
       		sendMessage();
     	};
   	};
@@ -112,27 +109,20 @@ const ChatWindow = () => {
 					</div>
 					))
 				) : (
-					<div className={styles.emptyChat}>Нет сообщений</div>
+					<div className={styles.emptyChat}>
+						<ShinyText text="No messages yet"/>
+					</div>
 				)}
 			</div>
-
-			<div className={styles.inputArea}>
-				<textarea
-				className={styles.input}
-				placeholder="сообщение"
+			<Input
+				mode="chatid"
+				placeholder="Ask anything"
 				value={input}
-				onChange={(e) => setInput(e.target.value)}
+				onChange={setInput}
 				onKeyDown={handleKeyDown}
-				/>
-				
-				<button
-				className={styles.sendButton}
-				onClick={sendMessage}
+				btnHandler={sendMessage}
 				disabled={loading}
-				>
-					<MdOutlineArrowUpward color="#000" size={18}/>
-				</button>
-			</div>
+			/>
     	</div>
 	);
 };
