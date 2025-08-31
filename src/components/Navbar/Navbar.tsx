@@ -2,10 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import styles from './Navbar.module.scss';
+import { useSession } from 'next-auth/react';
 
 
  
 const NavBar = () => {
+
+	const { data: session } = useSession();
 	const router = useRouter();
 
 	return (
@@ -18,12 +21,23 @@ const NavBar = () => {
 				>
 					Sing up
 				</button>
-				<button 
-					className={styles.authBtn}
-					onClick={() => router.push('/login')}
-				>
-					Log in
-				</button>
+
+				{!session?.user 
+				?
+					<button 
+						className={styles.authBtn}
+						onClick={() => router.push('/login')}
+					>
+						Log in
+					</button>
+				:
+					<button 
+						className={styles.authBtn}
+						onClick={() => router.push('/chat')}
+					>
+						Chat
+					</button>
+				}
 			</div>
 		</div>
 	);
