@@ -4,13 +4,14 @@ import { useState } from 'react';
 import styles from './LoginForm.module.scss';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 
 
 
 const LoginForm = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [, setError] = useState('');			
+	const [error, setError] = useState('');			
 	const router = useRouter();
 
 
@@ -20,7 +21,7 @@ const LoginForm = () => {
 
 		const res = await signIn('credentials', {redirect: false, email, password});
 		if (res?.error) {
-			setError(res.error);
+			setError('Incorrect email or password');
 			return;
 		};
 
@@ -53,12 +54,17 @@ const LoginForm = () => {
 				/>
 				<label className={styles.label} htmlFor="password">Password</label>
 			</div>
+			{error && <p className={styles.error}>{error}</p>}
 			<button
 				type='submit'
 				className={styles.registerBtn}
 			>
 				Continue
 			</button>
+			<div style={{display: 'flex', justifyContent: 'space-between'}}>
+				<Link style={{fontSize: 14, textDecoration: 'underline'}} href={'/register'}>Sing up</Link>
+				<Link style={{fontSize: 14, textDecoration: 'underline'}} href={'/'}>Back</Link>
+			</div>
 		</form>
 	);
 }
