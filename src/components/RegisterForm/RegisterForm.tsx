@@ -4,6 +4,7 @@ import { useState } from 'react';
 import styles from './RegisterForm.module.scss'
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 
 
 
@@ -11,7 +12,7 @@ const RegisterFrom = () => {
 
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [, setError] = useState('');
+	const [error, setError] = useState('');
 	const router = useRouter();
 
 
@@ -67,12 +68,17 @@ const RegisterFrom = () => {
 				/>
 				<label className={styles.label} htmlFor="password">Password</label>
 			</div>
+			{error && <p>{error}</p>}
 			<button
 				type='submit'
 				className={styles.registerBtn}
 			>
 				Continue
 			</button>
+				<div style={{display: 'flex', justifyContent: 'space-between'}}>
+					<Link style={{fontSize: 14, textDecoration: 'underline'}} href={'/login'}>Log in</Link>
+					<Link style={{fontSize: 14, textDecoration: 'underline'}} href={'/'}>Back</Link>
+				</div>
 		</form>
 	);
 }
