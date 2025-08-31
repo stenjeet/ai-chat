@@ -2,36 +2,77 @@ import { connectToDB } from '@/lib/mongoose';
 import Chat from '@/models/Chat';
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
-import { authOptions } from '../../auth/[...nextauth]/route';
 import User from '@/models/User';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod'
+import { authOptions } from '@/lib/authOptions';
 
+
+
+const ALLOWED_ORIGIN: string = process.env.ALLOWED_ORIGIN!;
 
 
 export async function GET(req: NextRequest, context: {params: Promise<{ chatId: string}>}){
-  await connectToDB();
-
-  try {
-	const params = await context.params;
-	const chatId = params.chatId;
-    const chat = await Chat.findById(chatId);
-
-    if (!chat) {
-      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(chat);
-  } catch (error) {
-    console.error('Error fetching chat:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
-
-
-export async function PATCH(request: NextRequest, context: {params: Promise<{ chatId: string}>}) {
+	const origin = req.headers.get('origin');
+	const referer = req.headers.get('referer');
 	
+	if (origin && origin !== ALLOWED_ORIGIN) {
+		return NextResponse.json({ error: 'Forbidden: invalid origin' }, { status: 403 });
+	};
+	if (referer && !referer.startsWith(ALLOWED_ORIGIN)) {
+		return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
+	};
+
+
 	const session = await getServerSession(authOptions);
-  	if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+  	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+
+  	await connectToDB();
+
+	try {
+		const params = await context.params;
+		const chatId = params.chatId;
+		const chat = await Chat.findById(chatId);
+
+		if (!chat) {
+		return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+		}
+
+		return NextResponse.json(chat);
+	} catch {
+		return NextResponse.json({ error: 'Server error' }, { status: 500 });
+	}
+};
+
+
+
+const messageSchema = z.object({
+  	role: z.enum(['user', 'assistant']),
+  	text: z.string().min(1, { message: 'Message text is required' }),
+  	timestamp: z.preprocess(
+		(arg) => (typeof arg === 'string' || arg instanceof Date ? new Date(arg) : undefined),
+    z.date()
+  	).optional(),
+});
+
+const messagesArraySchema = z.array(messageSchema);
+
+
+export async function PATCH(req: NextRequest, context: {params: Promise<{ chatId: string}>}) {
+	const origin = req.headers.get('origin');
+	const referer = req.headers.get('referer');
+	
+	if (origin && origin !== ALLOWED_ORIGIN) {
+		return NextResponse.json({ error: 'Forbidden: invalid origin' }, { status: 403 });
+	};
+	if (referer && !referer.startsWith(ALLOWED_ORIGIN)) {
+		return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
+	};
+
+
+	const session = await getServerSession(authOptions);
+  	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   	await connectToDB();
 
@@ -40,13 +81,18 @@ export async function PATCH(request: NextRequest, context: {params: Promise<{ ch
 
 	const params = await context.params;
 	const chatId = params.chatId;
-  	const body = await request.json();
+  	const body = await req.json();
   	const { newMessages } = body;
 
 
   	if (!Array.isArray(newMessages)) {
     	return NextResponse.json({ message: 'New messages must be an array' }, { status: 400 });
-  	};	
+  	};
+
+	const parseResult = messagesArraySchema.safeParse(newMessages);
+  	if (!parseResult.success) {
+    	return NextResponse.json({ message: 'Invalid messages format', errors: parseResult.error.issues }, { status: 400 });
+  	};
 
   	try {
     	const chat = await Chat.findById(chatId);
@@ -54,19 +100,16 @@ export async function PATCH(request: NextRequest, context: {params: Promise<{ ch
      		return NextResponse.json({ message: 'Chat not found' }, { status: 404 });
     	}
 
-    	// Проверяем, что чат принадлежит текущему пользователю
     	if (chat.userId.toString() !== user._id.toString()) {
-      		return NextResponse.json({ message: 'Нет доступа к этому чату' }, { status: 403 });
+      		return NextResponse.json({ message: 'No access to this chat' }, { status: 403 });
     	}
 	
-	console.log('newMessages:', newMessages);
     const updatedChat = await Chat.findByIdAndUpdate(
       chatId,
-      { $push: { messages: { $each: newMessages } } },
+      { $push: { messages: { $each: parseResult.data } } },
 	  { new: true }
     );
 
-	console.log(updatedChat)
 
     return NextResponse.json(updatedChat, { status: 200 });
   } catch (error) {
@@ -77,8 +120,19 @@ export async function PATCH(request: NextRequest, context: {params: Promise<{ ch
 
 
 export async function DELETE(req: NextRequest, context: {params: Promise<{ chatId: string}>}) {
+	const origin = req.headers.get('origin');
+	const referer = req.headers.get('referer');
+	
+	if (origin && origin !== ALLOWED_ORIGIN) {
+		return NextResponse.json({ error: 'Forbidden: invalid origin' }, { status: 403 });
+	};
+	if (referer && !referer.startsWith(ALLOWED_ORIGIN)) {
+		return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
+	};
+
+
 	const session = await getServerSession(authOptions);
-	if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
 	await connectToDB();
 
@@ -89,13 +143,13 @@ export async function DELETE(req: NextRequest, context: {params: Promise<{ chatI
 	const chatId = params.chatId;
 
 	const chat = await Chat.findById(chatId);
-	if (!chat) return NextResponse.json({ error: 'Чат не найден' }, { status: 404 });
+	if (!chat) return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
 
 	if (chat.userId.toString() !== session.user?.id) {
-    	return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
+    	return NextResponse.json({ error: 'No access' }, { status: 403 });
   	}
 
 	await Chat.findByIdAndDelete(chatId);
 
- 	return NextResponse.json({ message: 'Чат удален' }, { status: 200 });
+ 	return NextResponse.json({ message: 'Chat deleted' }, { status: 200 });
 };
