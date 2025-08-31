@@ -1,0 +1,13 @@
+.visualInput {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 500px;
+	padding: 10px 15px;
+	border-radius: 24px;
+	font-size: 18px;
+
+	background: rgba(255, 255, 255, 0.10);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
+}
