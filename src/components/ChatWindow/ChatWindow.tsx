@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from './ChatWindow.module.scss';
 import { useParams } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
@@ -94,20 +94,38 @@ const ChatWindow = () => {
   	}, [chatId]);
 
 
+	const lastUserMessageRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		if (messages.length === 0) return;
+
+		const lastMessage = messages[messages.length - 1];
+		
+		if (lastMessage.role === 'assistant' && lastUserMessageRef.current) {
+			lastUserMessageRef.current.scrollIntoView({ behavior: "smooth", block: 'start', inline: 'nearest'});
+		}
+	}, [messages])
+
+
 	return (
  		<div className={styles.container} >
 			<div className={styles.chatWindow}>
 				{(messages ?? []).length > 0 ? (
-					messages.map((msg, idx) => (
-					<div
-						key={idx}
-						className={`${styles.message} ${msg.role === 'user' ? styles.user : styles.assistant}`}
-					>
-						{msg.role === 'assistant' ? (
-							<ReactMarkdown>{msg.text}</ReactMarkdown>
-						) : (msg.text)}
-					</div>
-					))
+					messages.map((msg, idx) => {
+						const isLastUserMessage = msg.role === 'user' && (idx === messages.length - 1 || messages[idx + 1].role === 'assistant');
+						
+						return (
+							<div
+								key={idx}
+								className={`${styles.message} ${msg.role === 'user' ? styles.user : styles.assistant}`}
+								ref={isLastUserMessage ? lastUserMessageRef : null}
+							>
+								{msg.role === 'assistant' ? (
+									<ReactMarkdown>{msg.text}</ReactMarkdown>
+								) : (msg.text)}
+							</div>
+						)
+					})
 				) : (
 					<div className={styles.emptyChat}>
 						<ShinyText text="No messages yet"/>
