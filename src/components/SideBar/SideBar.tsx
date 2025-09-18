@@ -9,6 +9,7 @@ import ChatsList from '../ChatsList/ChatList';
 import Account from '../Account/Account';
 import { IChat } from '@/types';
 import { CiLogout } from 'react-icons/ci';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 
@@ -74,17 +75,33 @@ const SideBar = () => {
 						</div>
 					</div>
 				)}
-
+		
 				<div className={styles.bottom}>
-					{!collapsed
-					? 
-					(
-						<Account session={session}/>
-					)
-					:
-					(
-						<CiLogout className={styles.logout} onClick={() => signOut({ callbackUrl: "/" })}/>
-					)}
+					<AnimatePresence mode='wait'>
+						{!collapsed ? (
+							<motion.div
+								key="account"
+								initial={{ opacity: 0, x: -5}}
+								animate={{ opacity: 1, x: 0}}
+								exit={{ opacity: 0, x: -5}}
+								transition={{ duration: 0.3}}
+							>
+								<Account session={session}/>
+							</motion.div>
+						)
+						: (
+							<motion.div
+								key="logout"
+								initial={{ opacity: 0, y: 5 }}
+        						animate={{ opacity: 1, y: 0 }}
+        						exit={{ opacity: 0, y: 5 }}
+        						transition={{ duration: 0.3 }}
+        						onClick={() => signOut({ callbackUrl: "/" })}
+							>
+								<CiLogout className={styles.logout}/>
+							</motion.div>
+						)}
+					</AnimatePresence>
 				</div>
 		</div>
 	);
