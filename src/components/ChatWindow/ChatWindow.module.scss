@@ -96,20 +96,6 @@
   	margin: 0 0 1em 0; 
 }
 
-.dots::after {
-  	content: '';
-  	display: inline-block;
-  	width: 1ch;
-  	animation: blinkDots 1s steps(3, end) infinite;
-}
-
-@keyframes blinkDots {
-  	0%, 20% { content: ''; }
-  	40% { content: '.'; }
-  	60% { content: '..'; }
-  	80%, 100% { content: '...'; }
-}
-
 .markdown h1,
 .markdown h2,
 .markdown h3,

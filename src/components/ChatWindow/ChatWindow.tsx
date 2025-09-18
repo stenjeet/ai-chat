@@ -113,7 +113,8 @@ const ChatWindow = () => {
 	return (
  		<div className={styles.container} >
 			<div className={styles.chatWindow}>
-				<AnimatePresence initial={false}>
+				{(messages ?? []).length > 0 ? (
+					<AnimatePresence initial={false}>
   					{(messages ?? []).map((msg, idx) => {
     					const isLastUserMessage = msg.role === 'user' && (idx === messages.length - 1 || messages[idx + 1].role === 'system');
 
@@ -152,10 +153,19 @@ const ChatWindow = () => {
   					    	transition={{ duration: 0.3 }}
   					    	layout
   					  	>
-  					    	AI печатает<span className={styles.dots}>...</span>
+  					    	AI печатает...
   					  	</motion.div>
   					)}
 				</AnimatePresence>
+				)
+				: 
+				(
+					<div className={styles.emptyChat}>
+						<ShinyText text="No messages yet"/>
+					</div>
+				)
+				}
+				
 			</div>
 			
 			<Input

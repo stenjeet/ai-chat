@@ -7,8 +7,8 @@ import Input from '../Input/Input';
 
 
 interface Message {
-  role: 'user' | 'assistant';
-  text: string;
+  role: 'user' | 'system';
+  content: string;
 };
 
 const ChatInput = () => {
@@ -27,7 +27,7 @@ const ChatInput = () => {
 		const chat = await createChatRes.json();
 		const chatId = chat._id;
 
-		const userMessage: Message = { role: 'user', text: input };
+		const userMessage: Message = { role: 'user', content: input };
 
 
 		const resAI = await fetch('/api/message', {
@@ -36,8 +36,8 @@ const ChatInput = () => {
 			body: JSON.stringify({ message: input }),
 		});
 		const data = await resAI.json();
-		const aiResponse = data?.result?.alternatives?.[0]?.message?.text ?? 'Нет ответа';
-		const assistantMessage: Message = { role: 'assistant', text: aiResponse };
+		const aiResponse = data?.choices?.[0]?.message?.content ?? 'Нет ответа';
+		const assistantMessage: Message = { role: 'system', content: aiResponse };
 
 
 		await fetch(`/api/chats/${chatId}`, {
