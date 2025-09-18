@@ -6,12 +6,14 @@ import { useParams } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
 import Input from "../Input/Input";
 import ShinyText from "../ShinyText/ShinyText";
+import remarkGfm from "remark-gfm";
+import { motion, AnimatePresence} from "framer-motion";
 
 
 
 interface Message {
-  role: 'user' | 'assistant';
-  text: string;
+  role: 'user' | 'system';
+  content: string;
 };
 
 const ChatWindow = () => {
@@ -26,7 +28,7 @@ const ChatWindow = () => {
 	const sendMessage = async () => {
 		if (!input.trim() || !chatId) return;
 
-		const userMessage: Message = { role: 'user', text: input };
+		const userMessage: Message = { role: 'user', content: input };
 
 		setMessages((prev) => [...prev, userMessage]);
 		setInput('');
@@ -40,11 +42,12 @@ const ChatWindow = () => {
 			});
 
 			const data = await res.json();
-			const aiResponse = data?.result?.alternatives?.[0]?.message?.text ?? 'Нет ответа';
+			const aiResponse = data?.choices?.[0]?.message?.content ?? 'Нет ответа';
+
 
 			const assistantMessage: Message = {
-				role: 'assistant',
-				text: aiResponse,
+				role: 'system',
+				content: aiResponse,
 			};
 			setMessages(prev => [...prev, assistantMessage]);
 
@@ -101,7 +104,7 @@ const ChatWindow = () => {
 
 		const lastMessage = messages[messages.length - 1];
 		
-		if (lastMessage.role === 'assistant' && lastUserMessageRef.current) {
+		if (lastMessage.role === 'system' && lastUserMessageRef.current) {
 			lastUserMessageRef.current.scrollIntoView({ behavior: "smooth", block: 'start', inline: 'nearest'});
 		}
 	}, [messages])
@@ -110,28 +113,51 @@ const ChatWindow = () => {
 	return (
  		<div className={styles.container} >
 			<div className={styles.chatWindow}>
-				{(messages ?? []).length > 0 ? (
-					messages.map((msg, idx) => {
-						const isLastUserMessage = msg.role === 'user' && (idx === messages.length - 1 || messages[idx + 1].role === 'assistant');
-						
-						return (
-							<div
-								key={idx}
-								className={`${styles.message} ${msg.role === 'user' ? styles.user : styles.assistant}`}
-								ref={isLastUserMessage ? lastUserMessageRef : null}
-							>
-								{msg.role === 'assistant' ? (
-									<ReactMarkdown>{msg.text}</ReactMarkdown>
-								) : (msg.text)}
-							</div>
-						)
-					})
-				) : (
-					<div className={styles.emptyChat}>
-						<ShinyText text="No messages yet"/>
-					</div>
-				)}
+				<AnimatePresence initial={false}>
+  					{(messages ?? []).map((msg, idx) => {
+    					const isLastUserMessage = msg.role === 'user' && (idx === messages.length - 1 || messages[idx + 1].role === 'system');
+
+    					return (
+      						<motion.div
+      						  	key={idx}
+      						  	className={`${styles.message} ${msg.role === 'user' ? styles.user : styles.assistant}`}
+      						  	ref={isLastUserMessage ? lastUserMessageRef : null}
+      						  	initial={{ opacity: 0, y: -10 }}
+      						  	animate={{ opacity: 1, y: 0 }}
+      						  	exit={{ opacity: 0, y: -10 }}
+      						  	transition={{ duration: 0.3 }}
+      						  	layout
+      						>
+        						{msg.role === 'system' ? (
+          							<div className={styles.markdown}>
+    									<ReactMarkdown remarkPlugins={[remarkGfm]}>
+      										{msg.content}
+    									</ReactMarkdown>
+  									</div>
+        						) : (
+          							msg.content
+        						)}
+      						</motion.div>
+    					);
+  					})
+					};
+
+  					{loading && (
+  						<motion.div
+  					    	key="loading"
+  					    	className={`${styles.message} ${styles.assistant} ${styles.loading}`}
+  					    	initial={{ opacity: 0, y: -10 }}
+  					    	animate={{ opacity: 1, y: 0 }}
+  					    	exit={{ opacity: 0, y: -10 }}
+  					    	transition={{ duration: 0.3 }}
+  					    	layout
+  					  	>
+  					    	AI печатает<span className={styles.dots}>...</span>
+  					  	</motion.div>
+  					)}
+				</AnimatePresence>
 			</div>
+			
 			<Input
 				mode="chatid"
 				placeholder="Ask anything"
