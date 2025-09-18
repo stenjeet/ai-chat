@@ -4,7 +4,7 @@ import mongoose, { Schema } from "mongoose";
 
 const messageSchema = new Schema({
 	role: {type: String, enum: ['user', 'assistant'], required: true},
-	text: {type: String, required: true},
+	content: {type: String, required: true},
 	timestamp: { type: Date, default: Date.now },
 });
 

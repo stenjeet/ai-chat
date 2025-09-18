@@ -42,27 +42,19 @@ export async function POST(req: NextRequest) {
 
 
 		const response = await fetch(
-			'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
+			'https://llm.api.cloud.yandex.net/v1/chat/completions',
 			{
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Api-Key ${process.env.YANDEX_API_KEY}`,
+				Authorization: `Bearer ${process.env.YANDEX_API_KEY}`,
 			},
 			body: JSON.stringify({
-				modelUri: `gpt://${process.env.FOLDER_NAME}/yandexgpt-lite`,
-				completionOptions: {
-				stream: false,
-				temperature: 0.6,
-				maxTokens: '2000',
-				reasoningOptions: {
-					mode: 'DISABLED',
-				},
-				},
+				model: `gpt://${process.env.FOLDER_NAME}/gpt-oss-120b/latest`,
 				messages: [
 				{
 					role: 'user',
-					text: message,
+					content: message,
 				},
 				],
 			}),

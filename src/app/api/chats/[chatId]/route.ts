@@ -48,8 +48,8 @@ export async function GET(req: NextRequest, context: {params: Promise<{ chatId: 
 
 
 const messageSchema = z.object({
-  	role: z.enum(['user', 'assistant']),
-  	text: z.string().min(1, { message: 'Message text is required' }),
+  	role: z.enum(['user', 'system']),
+  	content: z.string().min(1, { message: 'Message text is required' }),
   	timestamp: z.preprocess(
 		(arg) => (typeof arg === 'string' || arg instanceof Date ? new Date(arg) : undefined),
     z.date()

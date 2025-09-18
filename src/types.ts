@@ -2,7 +2,7 @@ import { Types } from "mongoose"
 
 export enum RoleMessage{
 	USER = 'user',
-	ASSISTANT = 'assistant'
+	SYSTEM = 'system'
 };
 
 export interface IMessage {
