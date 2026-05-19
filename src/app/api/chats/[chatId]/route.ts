@@ -12,38 +12,38 @@ import { authOptions } from '@/lib/authOptions';
 const ALLOWED_ORIGIN: string = process.env.ALLOWED_ORIGIN!;
 
 
-export async function GET(req: NextRequest, context: {params: Promise<{ chatId: string}>}){
-	const origin = req.headers.get('origin');
-	const referer = req.headers.get('referer');
-	
-	if (origin && origin !== ALLOWED_ORIGIN) {
-		return NextResponse.json({ error: 'Forbidden: invalid origin' }, { status: 403 });
-	};
-	if (referer && !referer.startsWith(ALLOWED_ORIGIN)) {
-		return NextResponse.json({ error: 'Forbidden: invalid referer' }, { status: 403 });
-	};
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { chatId: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
+  await connectToDB();
 
-	const session = await getServerSession(authOptions);
-  	if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const chat = await Chat.findOne({
+      _id: params.chatId,
+      userId: session.user.id,
+    });
 
+    if (!chat) {
+      return NextResponse.json(
+        { error: "Chat not found" },
+        { status: 404 }
+      );
+    }
 
-  	await connectToDB();
-
-	try {
-		const params = await context.params;
-		const chatId = params.chatId;
-		const chat = await Chat.findById(chatId);
-
-		if (!chat) {
-		return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
-		}
-
-		return NextResponse.json(chat);
-	} catch {
-		return NextResponse.json({ error: 'Server error' }, { status: 500 });
-	}
-};
+    return NextResponse.json(chat);
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
+  }
+}
 
 
 
@@ -81,34 +81,36 @@ export async function PATCH(req: NextRequest, context: {params: Promise<{ chatId
 
 	const params = await context.params;
 	const chatId = params.chatId;
-  	const body = await req.json();
-  	const { newMessages } = body;
+
+	const existingChat = await Chat.findById(chatId);
+	if (!existingChat) {
+		return NextResponse.json({ message: 'Chat not found' }, { status: 404 });
+	}
+
+   	const body = await req.json();
+   	const { newMessages } = body;
 
 
-  	if (!Array.isArray(newMessages)) {
-    	return NextResponse.json({ message: 'New messages must be an array' }, { status: 400 });
-  	};
+   	if (!Array.isArray(newMessages)) {
+     	return NextResponse.json({ message: 'New messages must be an array' }, { status: 400 });
+   	};
 
 	const parseResult = messagesArraySchema.safeParse(newMessages);
-  	if (!parseResult.success) {
-    	return NextResponse.json({ message: 'Invalid messages format', errors: parseResult.error.issues }, { status: 400 });
-  	};
+   	if (!parseResult.success) {
+     	return NextResponse.json({ message: 'Invalid messages format', errors: parseResult.error.issues }, { status: 400 });
+   	};
 
-  	try {
-    	const chat = await Chat.findById(chatId);
-    	if (!chat) {
-     		return NextResponse.json({ message: 'Chat not found' }, { status: 404 });
-    	}
+   	try {
 
-    	if (chat.userId.toString() !== user._id.toString()) {
-      		return NextResponse.json({ message: 'No access to this chat' }, { status: 403 });
-    	}
+    	if (existingChat.userId.toString() !== user._id.toString()) {
+       		return NextResponse.json({ message: 'No access to this chat' }, { status: 403 });
+     	}
 	
-    const updatedChat = await Chat.findByIdAndUpdate(
-      chatId,
-      { $push: { messages: { $each: parseResult.data } } },
-	  { new: true }
-    );
+     const updatedChat = await Chat.findByIdAndUpdate(
+       chatId,
+       { $push: { messages: { $each: parseResult.data } } },
+ 	  { new: true }
+     );
 
 
     return NextResponse.json(updatedChat, { status: 200 });
@@ -139,13 +141,13 @@ export async function DELETE(req: NextRequest, context: {params: Promise<{ chatI
   	const user = await User.findOne({ email: session.user?.email });
   	if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-	const params = await context.params;
-	const chatId = params.chatId;
+const params = await context.params;
+const chatId = params.chatId;
 
-	const chat = await Chat.findById(chatId);
-	if (!chat) return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+const existingChat = await Chat.findById(chatId);
+if (!existingChat) return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
 
-	if (chat.userId.toString() !== session.user?.id) {
+if (existingChat.userId.toString() !== session.user?.id) {
     	return NextResponse.json({ error: 'No access' }, { status: 403 });
   	}
 

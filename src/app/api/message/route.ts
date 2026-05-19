@@ -42,15 +42,15 @@ export async function POST(req: NextRequest) {
 
 
 		const response = await fetch(
-			'https://llm.api.cloud.yandex.net/v1/chat/completions',
+			'https://openrouter.ai/api/v1/chat/completions',
 			{
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${process.env.YANDEX_API_KEY}`,
+				Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
 			},
 			body: JSON.stringify({
-				model: `gpt://${process.env.FOLDER_NAME}/gpt-oss-120b/latest`,
+				model: 'openai/gpt-oss-20b',
 				messages: [
 				{
 					role: 'user',
